@@ -38,6 +38,7 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
 
     private void customizeComponents(SmutDetectIngestJobSettings settings) {
         skipKnownFilesCheckBox.setSelected(settings.skipKnownFiles());
+        useThumbnailCheckBox.setSelected(settings.useThumbnail());
     }
 
     /**
@@ -47,7 +48,7 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
      */
     @Override
     public IngestModuleIngestJobSettings getSettings() {
-        return new SmutDetectIngestJobSettings(skipKnownFilesCheckBox.isSelected());
+        return new SmutDetectIngestJobSettings(skipKnownFilesCheckBox.isSelected(), useThumbnailCheckBox.isSelected(), Integer.parseInt(minSizeTextField.getText()));
     }
 
     /**
@@ -60,8 +61,32 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
     private void initComponents() {
 
         skipKnownFilesCheckBox = new javax.swing.JCheckBox();
+        minSizeTextField = new javax.swing.JTextField();
+        minSizeLabel = new javax.swing.JLabel();
+        useThumbnailCheckBox = new javax.swing.JCheckBox();
 
         org.openide.awt.Mnemonics.setLocalizedText(skipKnownFilesCheckBox, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.skipKnownFilesCheckBox.text")); // NOI18N
+        skipKnownFilesCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                skipKnownFilesCheckBoxActionPerformed(evt);
+            }
+        });
+
+        minSizeTextField.setText(org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.minSizeTextField.text")); // NOI18N
+        minSizeTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                minSizeTextFieldActionPerformed(evt);
+            }
+        });
+
+        org.openide.awt.Mnemonics.setLocalizedText(minSizeLabel, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.minSizeLabel.text")); // NOI18N
+
+        org.openide.awt.Mnemonics.setLocalizedText(useThumbnailCheckBox, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.useThumbnailCheckBox.text")); // NOI18N
+        useThumbnailCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                useThumbnailCheckBoxActionPerformed(evt);
+            }
+        });
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
@@ -69,18 +94,49 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(skipKnownFilesCheckBox)
-                .addContainerGap(255, Short.MAX_VALUE))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(useThumbnailCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, 399, Short.MAX_VALUE)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(layout.createSequentialGroup()
+                                .addComponent(minSizeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(minSizeLabel))
+                            .addComponent(skipKnownFilesCheckBox, javax.swing.GroupLayout.PREFERRED_SIZE, 217, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addGap(0, 0, Short.MAX_VALUE)))
+                .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(skipKnownFilesCheckBox)
-                .addContainerGap(270, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(minSizeTextField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(minSizeLabel))
+                .addGap(1, 1, 1)
+                .addComponent(useThumbnailCheckBox)
+                .addContainerGap(221, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
+
+    private void skipKnownFilesCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_skipKnownFilesCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_skipKnownFilesCheckBoxActionPerformed
+
+    private void minSizeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_minSizeTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_minSizeTextFieldActionPerformed
+
+    private void useThumbnailCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_useThumbnailCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_useThumbnailCheckBoxActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JLabel minSizeLabel;
+    private javax.swing.JTextField minSizeTextField;
     private javax.swing.JCheckBox skipKnownFilesCheckBox;
+    private javax.swing.JCheckBox useThumbnailCheckBox;
     // End of variables declaration//GEN-END:variables
 }

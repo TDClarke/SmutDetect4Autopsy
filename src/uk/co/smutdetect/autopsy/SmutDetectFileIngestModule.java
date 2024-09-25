@@ -24,18 +24,20 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.logging.Level;
+import org.sleuthkit.autopsy.coreutils.ImageUtils;
 import org.sleuthkit.autopsy.coreutils.Logger;
 import org.sleuthkit.autopsy.ingest.FileIngestModule;
 import org.sleuthkit.autopsy.ingest.IngestModule;
 import org.sleuthkit.autopsy.ingest.IngestJobContext;
 import org.sleuthkit.autopsy.ingest.IngestMessage;
 import org.sleuthkit.autopsy.ingest.IngestServices;
-import org.sleuthkit.autopsy.ingest.ModuleDataEvent;
 import org.sleuthkit.autopsy.ingest.IngestModuleReferenceCounter;
 import org.sleuthkit.datamodel.AbstractFile;
+import org.sleuthkit.datamodel.AnalysisResult;
+import org.sleuthkit.datamodel.AnalysisResultAdded;
 import org.sleuthkit.datamodel.BlackboardArtifact;
-import org.sleuthkit.datamodel.BlackboardArtifact.ARTIFACT_TYPE;
 import org.sleuthkit.datamodel.BlackboardAttribute;
+import org.sleuthkit.datamodel.Score;
 import org.sleuthkit.datamodel.TskCoreException;
 import org.sleuthkit.datamodel.TskData;
 import uk.co.smutdetect.SmutDetectCategorisedImage;
@@ -50,47 +52,23 @@ class SmutDetectFileIngestModule implements FileIngestModule {
     private static final HashMap<Long, Long> artifactCountsForIngestJobs = new HashMap<>();
     private static int attrId = -1;
     private final boolean skipKnownFiles;
+    private static boolean useThumbnail;
+    private static int minSize;
     private IngestJobContext context = null;
     private static final IngestModuleReferenceCounter refCounter = new IngestModuleReferenceCounter();
     private final static String MODULE_NAME = SmutDetectIngestModuleFactory.getModuleName();
+    private BlackboardArtifact analysisResult;
 
     SmutDetectFileIngestModule(SmutDetectIngestJobSettings settings) {
         this.skipKnownFiles = settings.skipKnownFiles();
+        this.useThumbnail = settings.useThumbnail();
+        this.minSize = settings.minSizeFiles();
     }
 
     @Override
     public void startUp(IngestJobContext context) throws IngestModuleException {
         this.context = context;
         refCounter.incrementAndGet(context.getJobId());
-        /*
-        synchronized (SmutDetectFileIngestModule.class) {
-            if (attrId == -1) {
-                // For this sample, make a new attribute type to use to post 
-                // results to the blackboard. There are many standard blackboard 
-                // artifact and attribute types and you should use them instead
-                // creating new ones to facilitate use of your results by other
-                // modules.
-                Case autopsyCase = Case.getCurrentCase();
-                SleuthkitCase sleuthkitCase = autopsyCase.getSleuthkitCase();
-                try {
-                    
-                    // See if the attribute type has already been defined.
-                    attrId = sleuthkitCase.getAttrTypeID("ATTR_SAMPLE");
-                    if (attrId == -1) {
-                        attrId = sleuthkitCase.addAttrType("ATTR_SAMPLE", "Sample Attribute");
-                    }
-   
-                } catch (TskCoreException ex) {
-                    IngestServices ingestServices = IngestServices.getInstance();
-                    Logger logger = ingestServices.getLogger(SmutDetectIngestModuleFactory.getModuleName());
-                    logger.log(Level.SEVERE, "Failed to create blackboard attribute", ex);
-                    attrId = -1;
-                    throw new IngestModuleException(ex.getLocalizedMessage());
-                }
-            }
-            
-        }
-        */
     }
 
     @Override
@@ -118,81 +96,51 @@ class SmutDetectFileIngestModule implements FileIngestModule {
         try {
             
             ////////////////////////DO////STUFFF/////////////////////////
-            
             SmutDetectCategorisedImage cImage;
             cImage = SmutDetectImageScanner.scanImage(file);
             int roundedPercentage = 0;
-            
-
-            
+           
             if(cImage != null) {
                 
-                                // Make a result collection
+                // Make a result collection
                 Collection<BlackboardAttribute> attributes = new ArrayList<BlackboardAttribute>();               
                 roundedPercentage = (int)Math.floor((cImage.getReadableAveragePercentage()/10) * 10);
                 // Add file comment
-                attributes.add(new BlackboardAttribute(
-                        BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT.getTypeID(), 
-                        MODULE_NAME,
-                        cImage.toString()));
-                attributes.add(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME.getTypeID(),
-                        MODULE_NAME,
-                        ("SmutDetect|" + String.format("%03d", roundedPercentage) + "s")));
+                attributes.add(new BlackboardAttribute(new BlackboardAttribute.Type(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT), MODULE_NAME, cImage.toString()));
+                attributes.add(new BlackboardAttribute(new BlackboardAttribute.Type(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME), MODULE_NAME, "SmutDetect|" + String.format("%03d", roundedPercentage) + "s"));
                 
-                // Add  tag name
-//                attributes.add(new BlackboardAttribute(
-//                        //BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME.getTypeID(),
-//                        BlackboardAttribute.ATTRIBUTE_TYPE.TSK_TAG_NAME.getTypeID(),
-//                        SmutDetectIngestModuleFactory.getModuleName(), ("SmutDetect|" + roundedPercentage + "s")));
- 
-//                // Add file category
-//                attributes.add(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_CATEGORY.getTypeID(),
-//                        MODULE_NAME,
-//                        "SmutDetect_Category"));
-               
-                // testing the other attributes:
-//                attributes.add(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_KEYWORD.getTypeID(),
-//                        MODULE_NAME,
-//                        "RW1_TSK_KEYWORD"));
-//                attributes.add(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_FLAG.getTypeID(),
-//                        SmutDetectIngestModuleFactory.getModuleName(),
-//                        "RW1_TSK_FLAG"));
 
-                
-                // Test RW1
-//                BlackboardArtifact parent = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT);
-//                parent.addAttribute(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME.getTypeID(),
-//                        MODULE_NAME,
-//                        ("SmutDetectParent")));         
-//
-//                attributes.add(new BlackboardAttribute(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_ASSOCIATED_ARTIFACT.getTypeID(),
-//                        MODULE_NAME,
-//                        parent.getArtifactID()));
+            if (!attributes.isEmpty()) {                    
+                // Call newAnalysisResult and store the result in an AnalysisResultAdded object
+                AnalysisResultAdded resultAdded = file.newAnalysisResult(
+                    BlackboardArtifact.Type.TSK_INTERESTING_ITEM, // Artifact type
+                    Score.SCORE_UNKNOWN,                         // Use appropriate score
+                    null,                                        // No conclusion
+                    null,                                        // No configuration description
+                    null,                                        // No justification
+                    attributes,                                  // Add attributes
+                    file.getId()                                 // Object ID (artifact ID)
+                );
 
-                //parent.getSleuthkitCase().
+                // Extract the actual AnalysisResult from the resultAdded object
+                AnalysisResult analysisResult = resultAdded.getAnalysisResult();
+            }
+            
+            // This method is thread-safe with per ingest job reference counted
+            // management of shared data.
+            addToBlackboardPostCount(context.getJobId(), 1L);
 
-                // Add the attributes, if there are any, to a new artifact
-
-                // Add the to the general info artifact for the file. In a
-                // real module, you would likely have more complex data types 
-                // and be making more specific artifacts.
-                //BlackboardArtifact art = file.getGenInfoArtifact();
-                //art.addAttribute(attr);
-
-                if (!attributes.isEmpty()) {                    
-                    // add file tags to the case:
-                    BlackboardArtifact bba = file.newArtifact(BlackboardArtifact.ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT);    
-                    bba.addAttributes(attributes);              
-                }
-                
-                // This method is thread-safe with per ingest job reference counted
-                // management of shared data.
-                addToBlackboardPostCount(context.getJobId(), 1L);
-
-                // Fire an event to notify any listeners for blackboard postings.
-                ModuleDataEvent event = new ModuleDataEvent(SmutDetectIngestModuleFactory.getModuleName(), ARTIFACT_TYPE.TSK_INTERESTING_FILE_HIT);
-                IngestServices.getInstance().fireModuleDataEvent(event);
-            } // end if SmutDetectCategorisedImage is not empty 
+            // Post a message instead of firing a module data event
+            IngestServices.getInstance().postMessage(
+            IngestMessage.createDataMessage(
+                SmutDetectIngestModuleFactory.getModuleName(),// Module name
+                "Interesting Item Detected",                  // Subject
+                "An interesting item was found",              // Message text
+                "Details about the interesting item.",        // Details
+                analysisResult   
+                )
+            );
+        }
             
             return IngestModule.ProcessResult.OK;
 
@@ -206,7 +154,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
 
     @Override
     public void shutDown() {
-        if (!context.isJobCancelled()) {
+        if (!context.fileIngestIsCancelled()) {
             // This method is thread-safe with per ingest job reference counted
             // management of shared data.
             reportBlackboardPostCount(context.getJobId());
@@ -265,8 +213,15 @@ class SmutDetectFileIngestModule implements FileIngestModule {
     private static boolean isImageFileHeader(AbstractFile file) {
         
         // if less than 100 bytes, do not parse
-        if (file.getSize() < 100) {
+        if (file.getSize() < minSize) {
             return false;
+        }
+        
+        // if image can be converted to a thumbnail parse
+        if (useThumbnail = true){
+           if (ImageUtils.isImageThumbnailSupported(file)) {
+            return true;
+           }
         }
         
         // read bytes if unable do not parse
