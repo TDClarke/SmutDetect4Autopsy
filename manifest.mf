@@ -2,5 +2,5 @@ Manifest-Version: 1.0
 AutoUpdate-Show-In-Client: true
 OpenIDE-Module: uk.co.smutdetect
 OpenIDE-Module-Localizing-Bundle: uk/co/smutdetect/Bundle.properties
-OpenIDE-Module-Specification-Version: 1.0.3
+OpenIDE-Module-Specification-Version: 1.0.4
 

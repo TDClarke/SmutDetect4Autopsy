@@ -20,6 +20,7 @@
  */
 package uk.co.smutdetect.autopsy;
 
+import javax.swing.JTextField;
 import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettings;
 
 /**
@@ -29,12 +30,16 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     
     private static final long serialVersionUID = 1L;
     private boolean skipKnownFiles = true;
+    private boolean useThumbnail = true;
+    private int minSize = 100;
 
     SmutDetectIngestJobSettings() {
     }
 
-    SmutDetectIngestJobSettings(boolean skipKnownFiles) {
+    SmutDetectIngestJobSettings(boolean skipKnownFiles, boolean useThumbnail, int minSize) {
         this.skipKnownFiles = skipKnownFiles;
+        this.useThumbnail = useThumbnail;
+        this.minSize = minSize;
     }
 
     @Override
@@ -45,8 +50,20 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     void setSkipKnownFiles(boolean enabled) {
         skipKnownFiles = enabled;
     }
+    
+    void setuseHeaders(boolean disabled) {
+        useThumbnail = disabled;
+    }
 
     boolean skipKnownFiles() {
         return skipKnownFiles;
+    }
+    
+    boolean useThumbnail() {
+        return useThumbnail;
+    }
+    
+    int minSizeFiles() {
+        return minSize;
     }
 }
