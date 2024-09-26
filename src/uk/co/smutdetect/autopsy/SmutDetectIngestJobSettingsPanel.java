@@ -20,6 +20,7 @@
  */
 package uk.co.smutdetect.autopsy;
 
+import org.openide.util.Exceptions;
 import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettings;
 import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettingsPanel;
 
@@ -28,10 +29,12 @@ import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettingsPanel;
  */
 public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSettingsPanel {
 
+    int minSizeTextFieldIsInt;
     /**
      * Creates new form SampleIngestModuleIngestJobSettings
      */
     public SmutDetectIngestJobSettingsPanel(SmutDetectIngestJobSettings settings) {
+        this.minSizeTextFieldIsInt = 100;
         initComponents();
         customizeComponents(settings);
     }
@@ -76,6 +79,11 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         minSizeTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 minSizeTextFieldActionPerformed(evt);
+            }
+        });
+        minSizeTextField.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                minSizeTextFieldKeyPressed(evt);
             }
         });
 
@@ -133,10 +141,23 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         // TODO add your handling code here:
     }//GEN-LAST:event_useThumbnailCheckBoxActionPerformed
 
+    private void minSizeTextFieldKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_minSizeTextFieldKeyPressed
+        try {
+            minSizeTextFieldIsInt = Integer.parseInt(minSizeTextField.getText());
+            if (minSizeTextFieldIsInt < 100 || minSizeTextFieldIsInt > 2147483647) throw NumberFormatException();
+        } catch (Exception e) {
+            minSizeTextField.setText("100");
+        }
+    }//GEN-LAST:event_minSizeTextFieldKeyPressed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JLabel minSizeLabel;
     private javax.swing.JTextField minSizeTextField;
     private javax.swing.JCheckBox skipKnownFilesCheckBox;
     private javax.swing.JCheckBox useThumbnailCheckBox;
     // End of variables declaration//GEN-END:variables
+
+    private Exception NumberFormatException() {
+        throw new UnsupportedOperationException("Not supported yet."); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/GeneratedMethodBody
+    }
 }
