@@ -20,23 +20,26 @@
  */
 package uk.co.smutdetect.autopsy;
 
-import javax.swing.JTextField;
 import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettings;
 
 /**
- * Ingest job options for sample ingest module instances.
+ * Ingest job options for the SmutDetect ingest module.
  */
 public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSettings {
-    
-    private static final long serialVersionUID = 1L;
+
+    // Bumped from 1 when minSize was added: settings saved by the old class
+    // would otherwise deserialise with minSize == 0 (field initialisers do not
+    // run on deserialisation). Autopsy falls back to the defaults instead.
+    private static final long serialVersionUID = 2L;
+
     private boolean skipKnownFiles = true;
     private boolean useThumbnail = true;
-    private int minSize = 100;
+    private long minSize = 100;
 
     SmutDetectIngestJobSettings() {
     }
 
-    SmutDetectIngestJobSettings(boolean skipKnownFiles, boolean useThumbnail, int minSize) {
+    SmutDetectIngestJobSettings(boolean skipKnownFiles, boolean useThumbnail, long minSize) {
         this.skipKnownFiles = skipKnownFiles;
         this.useThumbnail = useThumbnail;
         this.minSize = minSize;
@@ -45,25 +48,29 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     @Override
     public long getVersionNumber() {
         return serialVersionUID;
-    }    
-    
+    }
+
     void setSkipKnownFiles(boolean enabled) {
         skipKnownFiles = enabled;
     }
-    
-    void setuseHeaders(boolean disabled) {
-        useThumbnail = disabled;
+
+    void setUseThumbnail(boolean enabled) {
+        useThumbnail = enabled;
+    }
+
+    void setMinSize(long minSize) {
+        this.minSize = minSize;
     }
 
     boolean skipKnownFiles() {
         return skipKnownFiles;
     }
-    
+
     boolean useThumbnail() {
         return useThumbnail;
     }
-    
-    int minSizeFiles() {
+
+    long minSizeFiles() {
         return minSize;
     }
 }
