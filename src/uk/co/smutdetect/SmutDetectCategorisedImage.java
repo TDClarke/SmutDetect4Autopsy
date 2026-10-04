@@ -1,337 +1,161 @@
 /**
  * SmutDetect
  * Copyright (C) 2014 Rajmund Witt
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- * 
  */
 
 package uk.co.smutdetect;
 
-import java.math.BigDecimal;
-import java.math.MathContext;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 /**
- * Container for indexed Images which hold the statistical information of the 
- * Image.
- * 
+ * Container for the skin-tone statistics of one scanned image.
+ *
+ * All percentage maths is done with integer arithmetic, so there is no
+ * floating-point truncation (e.g. 29 of 100 pixels is 29%, not 28%) and no
+ * int overflow on large images.
+ *
  * @author Rajmund Witt
- * @version 0.5
- * 
- * @see LogWriter
- * @see SystemInformation
+ * @version 0.6
  */
-public class SmutDetectCategorisedImage implements Comparable {
-	
-	
-	// existing information / required
-	private int width_;
-	private int height_;
-	
-	// needs to be computed
-	private boolean hasSkinTone_;
-	private boolean isProcessedCorrectly_;
-	private int numberOfPixels_;
-	private int numberOfRgbSkinToneHits_;
-	private int numberOfYCbCrSkinToneHits_;
-	private double preciseRgbPercentage_;
-	private double preciseYCbCrPercentage_;
-	private double preciseAveragePercentage_;
-	private int readableRgbPercentage_;
-	private int readableYCbCrPercentage_;
-	private int readableAveragePercentage_;
+public class SmutDetectCategorisedImage {
 
-	
-	
-//////////////////////////////////CONSTRUCTORS//////////////////////////////////
+    private static final int MAX_DIMENSION = 100000;
 
-	private SmutDetectCategorisedImage() {
-		// do nothing as not allowed
-	}
+    private final int width_;
+    private final int height_;
+    private final long numberOfPixels_;
 
-	public SmutDetectCategorisedImage(int width,int height) {
-		
-		// check if passed values make sense - otherwise change verification
-		// state
-		if ((width > 0 && width < 100000) && (height > 0 && height < 100000)) {
-			width_ = width;
-			height_ = height;
-			numberOfPixels_ = width_ * height_;
-			
-		} else {
-			isProcessedCorrectly_ = false;
-			width_ = 100;
-			height_ = 100;
-			numberOfPixels_ = 10000;
-		}		
-	
-		// default values
-		hasSkinTone_ = false;
-		isProcessedCorrectly_ = true;
-		numberOfRgbSkinToneHits_ = 0;
-		numberOfYCbCrSkinToneHits_ = 0;
-		preciseRgbPercentage_ = 0.0;
-		preciseYCbCrPercentage_ = 0.0;
-		preciseAveragePercentage_ = 0.0;
-		readableRgbPercentage_ = 0;
-		readableYCbCrPercentage_ = 0;
-		readableAveragePercentage_ = 0;
-			
-				
-	}
-	
-/////////////////////////////////////GETTERS////////////////////////////////////
+    private boolean hasSkinTone_;
+    private boolean isProcessedCorrectly_;
+    private long numberOfRgbSkinToneHits_;
+    private long numberOfYCbCrSkinToneHits_;
+    private double preciseRgbPercentage_;
+    private double preciseYCbCrPercentage_;
+    private double preciseAveragePercentage_;
+    private int readableRgbPercentage_;
+    private int readableYCbCrPercentage_;
+    private int readableAveragePercentage_;
 
-	
-	public int getWidth() {
-		return width_;
-	}
-	
-	public int getHeight() {
-		return height_;
-	}
-	
-
-	public boolean getHasSkinTone() {
-		return hasSkinTone_;
-	}
-	
-	public boolean getIsProcessedCorrectly() {
-		return isProcessedCorrectly_;
-	}	
-	
-	public int getNumberOfPixels() {
-		return numberOfPixels_;
-	}
-	
-	public double getPreciseRgbPercentage() {
-		return preciseRgbPercentage_;
-	}
-	
-	public double getPreciseYCbCrPercentage() {
-		return preciseYCbCrPercentage_;
-	}
-	
-	public double getPreciseAveragePercentage() {
-		return preciseAveragePercentage_;
-	}
-	
-	public int getReadableRgbPercentage() {
-		return readableRgbPercentage_;
-	}
-	
-	public int getReadableYCbCrPercentage() {
-		return readableYCbCrPercentage_;
-	}
-	
-	public int getReadableAveragePercentage() {
-		return readableAveragePercentage_;
-	}
-	
-
-
-/////////////////////////////////////SETTERS////////////////////////////////////
-
-	
-
-	
-	public void setHasSkinTone(boolean hasSkinTone) {
-		hasSkinTone_ = hasSkinTone;
-	}
-	
-
-	
-/////////////////////////////////////OTHERS/////////////////////////////////////
-
-	public void increasNumberOfRgbSkinToneHits() {
-		numberOfRgbSkinToneHits_++;
-	}
-	
-	public void increasNumberOfYCbCrSkinToneHits() {
-		numberOfYCbCrSkinToneHits_++;
-	}
-	
-	/**
-	 * Computes the Percentages -  Example: 0.666677 and sets the according
-	 * variables of the Categorised Image. Should only performed once the 
-	 * whole image has been processed.
-	 */
-	public void computePercentages(boolean usedRGB, boolean usedYCbCr) {
-			
-		// only compute if numbers are logical otherwise reset for manual check
-		// with maximum percentage
-		if ((numberOfRgbSkinToneHits_ <= numberOfPixels_) && 
-				(numberOfYCbCrSkinToneHits_ <= numberOfPixels_)) {
-			
-                        if ((numberOfRgbSkinToneHits_ > 0) || 
-                                            (numberOfYCbCrSkinToneHits_ > 0)) {
-                            hasSkinTone_ = true;
-                        }
-                    
-                    
-			MathContext precision = MathContext.DECIMAL32;
-			BigDecimal a = new BigDecimal(numberOfRgbSkinToneHits_);
-			BigDecimal a2 = new BigDecimal(numberOfYCbCrSkinToneHits_);
-			BigDecimal b = new BigDecimal(numberOfPixels_);
-			
-			try {
-				
-				a = a.divide(b, precision);
-				a2 = a2.divide(b, precision);
-				
-			} catch (ArithmeticException exc) {
-				exc.printStackTrace();
-			
-			}
-			
-			preciseRgbPercentage_ = a.doubleValue();
-			preciseYCbCrPercentage_ = a2.doubleValue();
-			
-			readableRgbPercentage_ = formatPercentage(preciseRgbPercentage_);
-			readableYCbCrPercentage_ = 
-				formatPercentage(preciseYCbCrPercentage_);
-			
-			// check how average is composed
-			if (usedRGB && usedYCbCr) {
-				BigDecimal b_avg = new BigDecimal(2);
-				
-				// add all percentages and divide by the amount of types
-				BigDecimal avg = (a.add(a2)).divide(b_avg, precision);
-				preciseAveragePercentage_ = avg.doubleValue();
-				
-			} else if (usedYCbCr) {
-				preciseAveragePercentage_ = preciseYCbCrPercentage_;				
-			} else {
-				preciseAveragePercentage_ = preciseRgbPercentage_;
-			}
-			readableAveragePercentage_ = 
-				formatPercentage(preciseAveragePercentage_);	
-			
-			
-		} else {
-			isProcessedCorrectly_ = false;
-			// as an image is to be checked manually if errors occur during the
-			// analysis the percentage is set to 100% to force listing and 
-			// checking			
-			preciseRgbPercentage_ = 1.0;
-			preciseYCbCrPercentage_ = 1.0;
-			preciseAveragePercentage_ = 1.0;
-			readableRgbPercentage_ = 100;
-			readableYCbCrPercentage_ = 100;
-			readableAveragePercentage_ = 100;
-		}
-		
-		
-	}
-	
-	
-	
-	/**
-	 * @return readablePercentage Returns the percentage as a readable/integer
-	 *  form from 0 to a 100
-	 */
-	public int formatPercentage(double percentage) {
-		int readablePercentage = (int) (percentage * 100);
-
-		return readablePercentage;		
-	}
-	
-
-	/**
-	 * Compares CategorizedImages and sorts by the following hierarchy: 
-	 * skinTone% - LastModified
-	 * 
-	 * @param CategorizedImage
-	 * @see java.lang.Comparable#compareTo(java.lang.Object)
-	 */
-	public int compareTo(Object image2) {
-		// Concept inspired by http://www.java-tips.org/java-se-tips/java.lang/
-		// how-to-use-comparable-interface.html - Downcasting, they show no
-		//		try catch though
-		// and http://lkamal.blogspot.com/2008/07/
-		//			java-sorting-comparator-vs-comparable.html - Which Interface
-
-		double image2Percentage = 0;
-		long image2LastMod = 0;
-		
-		// try accessing properties from other Categorized Image
-		try {	
-		
-			image2Percentage = 
-				((SmutDetectCategorisedImage)image2).getPreciseAveragePercentage();
-
-			
-                        //image2LastMod = ((SmutDetectCategorisedImage)image2).getLastModified();		
-			
-			
-		} catch (ClassCastException exc) {
-			exc.printStackTrace();
-			//log_.appendString("Problem when sorting Images - ClassCastError");
-			
-		} // end try downcasting
-
-		if (preciseAveragePercentage_ > image2Percentage) {
-			
-			return 1;
-			
-		} else if (preciseAveragePercentage_ < image2Percentage) {
-			
-			return -1;
-			
-		} else {
-			/*
-			// if same percentage - check for last modified date
-			if (lastModified_ > image2LastMod) {
-				
-				return 1;
-				
-			} else if (lastModified_ < image2LastMod) {
-				
-				return -1;
-				
-			} else {
-				
-				return 0;
-				
-			} // end if else lastmodified	
-			*/
-                        return 0;
-		} // end if else skintone%
-		
+    /**
+     * @param width  width in pixels of the image as scanned
+     * @param height height in pixels of the image as scanned
+     *
+     * Implausible dimensions leave the image flagged as not processed
+     * correctly, which makes computePercentages() report 100% so the file is
+     * listed for manual review.
+     */
+    public SmutDetectCategorisedImage(int width, int height) {
+        if (width > 0 && width < MAX_DIMENSION && height > 0 && height < MAX_DIMENSION) {
+            width_ = width;
+            height_ = height;
+            numberOfPixels_ = (long) width * height;
+            isProcessedCorrectly_ = true;
+        } else {
+            width_ = 0;
+            height_ = 0;
+            numberOfPixels_ = 0;
+            isProcessedCorrectly_ = false;
+        }
     }
-	
-	/**
-	 * @return the CategorisedImage as a textual representation to ease 
-	 * 			report export
-	 */
-	public String toString() {
-		
 
-		StringBuilder theString = new StringBuilder();
+    // ------------------------------- getters ---------------------------------
 
-		theString.append(readableAveragePercentage_ + "%\n");
-		theString.append(width_ + "x" + height_ + " = " + numberOfPixels_);
-		theString.append("px\n");
-		theString.append("RGB DetectorValue: " + preciseRgbPercentage_);
-		theString.append("\nYCbCr DetectorValue: " + preciseYCbCrPercentage_);
-		theString.append("\nProcessed correctly: ");
-		theString.append(isProcessedCorrectly_);
+    public int getWidth() { return width_; }
+    public int getHeight() { return height_; }
+    public boolean getHasSkinTone() { return hasSkinTone_; }
+    public boolean getIsProcessedCorrectly() { return isProcessedCorrectly_; }
+    public long getNumberOfPixels() { return numberOfPixels_; }
+    public double getPreciseRgbPercentage() { return preciseRgbPercentage_; }
+    public double getPreciseYCbCrPercentage() { return preciseYCbCrPercentage_; }
+    public double getPreciseAveragePercentage() { return preciseAveragePercentage_; }
+    public int getReadableRgbPercentage() { return readableRgbPercentage_; }
+    public int getReadableYCbCrPercentage() { return readableYCbCrPercentage_; }
+    public int getReadableAveragePercentage() { return readableAveragePercentage_; }
 
-		
-		return theString.toString();
-	}
+    // ------------------------------- setters ---------------------------------
 
+    public void setHasSkinTone(boolean hasSkinTone) {
+        hasSkinTone_ = hasSkinTone;
+    }
+
+    /**
+     * Sets the total hit counts for the whole image. Replaces the old
+     * per-pixel increment methods.
+     */
+    public void setHits(long rgbHits, long yCbCrHits) {
+        numberOfRgbSkinToneHits_ = rgbHits;
+        numberOfYCbCrSkinToneHits_ = yCbCrHits;
+    }
+
+    // ------------------------------- compute ---------------------------------
+
+    /**
+     * Computes the percentages. Call once, after the whole image has been
+     * scanned and setHits() has been called.
+     *
+     * @param usedRGB    the RGB test contributes to the average
+     * @param usedYCbCr  the YCbCr test contributes to the average
+     */
+    public void computePercentages(boolean usedRGB, boolean usedYCbCr) {
+        final long px = numberOfPixels_;
+
+        if (!isProcessedCorrectly_ || px <= 0
+                || numberOfRgbSkinToneHits_ < 0 || numberOfRgbSkinToneHits_ > px
+                || numberOfYCbCrSkinToneHits_ < 0 || numberOfYCbCrSkinToneHits_ > px) {
+            // Something is illogical: force 100% so the image gets listed and
+            // checked manually.
+            isProcessedCorrectly_ = false;
+            preciseRgbPercentage_ = 1.0;
+            preciseYCbCrPercentage_ = 1.0;
+            preciseAveragePercentage_ = 1.0;
+            readableRgbPercentage_ = 100;
+            readableYCbCrPercentage_ = 100;
+            readableAveragePercentage_ = 100;
+            return;
+        }
+
+        final long rgb = numberOfRgbSkinToneHits_;
+        final long ycc = numberOfYCbCrSkinToneHits_;
+
+        hasSkinTone_ = rgb > 0 || ycc > 0;
+
+        preciseRgbPercentage_ = (double) rgb / px;
+        preciseYCbCrPercentage_ = (double) ycc / px;
+        readableRgbPercentage_ = (int) (rgb * 100L / px);
+        readableYCbCrPercentage_ = (int) (ycc * 100L / px);
+
+        if (usedRGB && usedYCbCr) {
+            preciseAveragePercentage_ = (preciseRgbPercentage_ + preciseYCbCrPercentage_) / 2.0;
+            readableAveragePercentage_ = (int) ((rgb + ycc) * 50L / px);
+        } else if (usedYCbCr) {
+            preciseAveragePercentage_ = preciseYCbCrPercentage_;
+            readableAveragePercentage_ = readableYCbCrPercentage_;
+        } else {
+            preciseAveragePercentage_ = preciseRgbPercentage_;
+            readableAveragePercentage_ = readableRgbPercentage_;
+        }
+    }
+
+    /** @return textual representation, used as the artifact comment */
+    @Override
+    public String toString() {
+        StringBuilder s = new StringBuilder();
+        s.append(readableAveragePercentage_).append("%\n");
+        s.append(width_).append("x").append(height_).append(" = ").append(numberOfPixels_).append("px\n");
+        s.append("RGB DetectorValue: ").append(preciseRgbPercentage_);
+        s.append("\nYCbCr DetectorValue: ").append(preciseYCbCrPercentage_);
+        s.append("\nProcessed correctly: ").append(isProcessedCorrectly_);
+        return s.toString();
+    }
 }
