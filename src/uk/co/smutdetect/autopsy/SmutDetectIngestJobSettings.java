@@ -30,7 +30,7 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     // Bumped from 1 when minSize was added: settings saved by the old class
     // would otherwise deserialise with minSize == 0 (field initialisers do not
     // run on deserialisation). Autopsy falls back to the defaults instead.
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 1L;
 
     private boolean skipKnownFiles = true;
     private boolean useThumbnail = true;
