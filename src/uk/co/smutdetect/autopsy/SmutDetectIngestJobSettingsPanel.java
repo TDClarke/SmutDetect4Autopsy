@@ -78,6 +78,7 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         useThumbnailCheckBox = new javax.swing.JCheckBox();
         imageBytesjSpinner = new javax.swing.JSpinner();
         minSizeLabel = new javax.swing.JLabel();
+        detectNudityjCheckBox = new javax.swing.JCheckBox();
 
         org.openide.awt.Mnemonics.setLocalizedText(skipKnownFilesCheckBox, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.skipKnownFilesCheckBox.text")); // NOI18N
         skipKnownFilesCheckBox.addActionListener(new java.awt.event.ActionListener() {
@@ -98,6 +99,14 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
 
         org.openide.awt.Mnemonics.setLocalizedText(minSizeLabel, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.minSizeLabel.text")); // NOI18N
 
+        detectNudityjCheckBox.setSelected(true);
+        org.openide.awt.Mnemonics.setLocalizedText(detectNudityjCheckBox, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.detectNudityjCheckBox.text")); // NOI18N
+        detectNudityjCheckBox.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                detectNudityjCheckBoxActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(this);
         this.setLayout(layout);
         layout.setHorizontalGroup(
@@ -113,7 +122,8 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
                                 .addComponent(imageBytesjSpinner, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                                 .addComponent(minSizeLabel)))
-                        .addGap(0, 0, Short.MAX_VALUE)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addComponent(detectNudityjCheckBox, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -127,7 +137,9 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
                     .addComponent(minSizeLabel))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(useThumbnailCheckBox)
-                .addContainerGap(221, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                .addComponent(detectNudityjCheckBox)
+                .addContainerGap(189, Short.MAX_VALUE))
         );
     }// </editor-fold>//GEN-END:initComponents
 
@@ -139,7 +151,12 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         // TODO add your handling code here:
     }//GEN-LAST:event_useThumbnailCheckBoxActionPerformed
 
+    private void detectNudityjCheckBoxActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_detectNudityjCheckBoxActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_detectNudityjCheckBoxActionPerformed
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JCheckBox detectNudityjCheckBox;
     private javax.swing.JSpinner imageBytesjSpinner;
     private javax.swing.JLabel minSizeLabel;
     private javax.swing.JCheckBox skipKnownFilesCheckBox;

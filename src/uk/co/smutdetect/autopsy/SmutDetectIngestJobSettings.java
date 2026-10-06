@@ -35,6 +35,7 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     private boolean skipKnownFiles = true;
     private boolean useThumbnail = true;
     private long minSize = 100;
+    private boolean detectNudity = true;
 
     SmutDetectIngestJobSettings() {
     }

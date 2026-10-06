@@ -137,6 +137,28 @@ class SmutDetectFileIngestModule implements FileIngestModule {
             // it notifies the UI and other modules. (Newer Autopsy versions
             // also offer postArtifact(artifact, moduleName, context.getJobId()).)
             blackboard.postArtifact(resultAdded.getAnalysisResult(), MODULE_NAME);
+            
+            if (cImage.isNude()) {
+                Collection<BlackboardAttribute> nudeAttrs = new ArrayList<>();
+                nudeAttrs.add(new BlackboardAttribute(
+                new BlackboardAttribute.Type(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_SET_NAME),
+                MODULE_NAME, "SmutDetect|Nude"));
+                
+                nudeAttrs.add(new BlackboardAttribute(
+                new BlackboardAttribute.Type(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT),
+                MODULE_NAME, cImage.toString()));
+
+                AnalysisResultAdded nudeResult = file.newAnalysisResult(
+                BlackboardArtifact.Type.TSK_INTERESTING_ITEM,
+                Score.SCORE_LIKELY_NOTABLE,
+                "Possible nudity",
+                "SmutDetect region heuristic",
+                "Large contiguous skin-tone region(s) detected",
+                nudeAttrs);
+                
+                blackboard.postArtifact(nudeResult.getAnalysisResult(), MODULE_NAME);
+                addToBlackboardPostCount(context.getJobId(), 1L);
+            }
 
             addToBlackboardPostCount(context.getJobId(), 1L);
             return IngestModule.ProcessResult.OK;
