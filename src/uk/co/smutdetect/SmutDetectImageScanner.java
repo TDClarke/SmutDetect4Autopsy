@@ -68,13 +68,37 @@ public abstract class SmutDetectImageScanner {
     /** Images whose (decoded) pixel count exceeds this are skipped. */
     public static final long MAX_PIXELS = 100_000_000L;
 
+    private static final int NUDE_MAX_DIM = 1024;
+    
     /**
      * Scans the full-resolution image (same behaviour as the original module).
      */
     public static SmutDetectCategorisedImage scanImage(AbstractFile file) {
-        return scanImage(file, 0);
+        return scanImage(file, 0, true);
     }
 
+    private static NudityClassifier.Result classifyNudity(BufferedImage img, int bw, int bh) {
+        try {
+            final int step = Math.max(1, Math.max(bw, bh) / NUDE_MAX_DIM);
+            final int sw = (bw + step - 1) / step;
+            final int sh = (bh + step - 1) / step;
+            final int[] argb = new int[sw * sh];
+            final int[] row = new int[bw];
+            int k = 0;
+            for (int y = 0; y < bh; y += step) {
+                img.getRGB(0, y, bw, 1, row, 0, bw);
+                for (int x = 0; x < bw; x += step) {
+                    argb[k++] = row[x];
+                }
+            }
+        return NudityClassifier.classify(argb, sw, sh);
+        }
+        catch (RuntimeException | OutOfMemoryError e) {
+            logger_.log(Level.WARNING, "Nudity classification failed", e);
+            return NudityClassifier.Result.ERROR;
+        }
+    }
+    
     /**
      * @param file        the file to scan
      * @param maxScanDim  if greater than 0, the image is decoded sub-sampled so
@@ -84,7 +108,7 @@ public abstract class SmutDetectImageScanner {
      *                    point or two from a full scan. 0 scans every pixel.
      * @return the result, or null if the file could not be read as an image
      */
-    public static SmutDetectCategorisedImage scanImage(AbstractFile file, int maxScanDim) {
+    public static SmutDetectCategorisedImage scanImage(AbstractFile file, int maxScanDim, boolean detectNudity) {
         try (InputStream in = new ReadContentInputStream(file);
                 ImageInputStream iis = new MemoryCacheImageInputStream(in)) {
 
@@ -139,6 +163,10 @@ public abstract class SmutDetectImageScanner {
                 SmutDetectCategorisedImage cImage = new SmutDetectCategorisedImage(bw, bh);
                 cImage.setHits(rgbHits, yccHits);
                 cImage.computePercentages(true, true);
+                
+                if (detectNudity) {
+                    cImage.setNudity(classifyNudity(img, bw, bh));
+                }
                 return cImage;
 
             } finally {

@@ -46,6 +46,11 @@ public class SmutDetectCategorisedImage {
     private int readableRgbPercentage_;
     private int readableYCbCrPercentage_;
     private int readableAveragePercentage_;
+    private NudityClassifier.Result nudity_ = null; // null = not run
+
+    public NudityClassifier.Result getNudity() { return nudity_; }
+    public void setNudity(NudityClassifier.Result r) { nudity_ = r; }
+    public boolean isNude() { return nudity_ == NudityClassifier.Result.NUDE; }
 
     /**
      * @param width  width in pixels of the image as scanned
