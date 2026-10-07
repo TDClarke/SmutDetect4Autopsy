@@ -30,7 +30,6 @@ import org.openide.util.lookup.ServiceProvider;
 // internationalization and localization. Autopsy core is currently localized 
 // for Japan. Please consult the NetBeans documentation for details.
 import org.openide.util.NbBundle;
-import org.sleuthkit.autopsy.coreutils.Version;
 
 import org.sleuthkit.autopsy.ingest.IngestModuleFactory;
 import org.sleuthkit.autopsy.ingest.DataSourceIngestModule;
@@ -79,10 +78,10 @@ import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettingsPanel;
  * extend the abstract class IngestModuleFactoryAdapter to get default
  * implementations of most of the IngestModuleFactory methods.
  */
-@ServiceProvider(service = IngestModuleFactory.class) // Sample is discarded at runtime 
+@ServiceProvider(service = IngestModuleFactory.class)
 public class SmutDetectIngestModuleFactory implements IngestModuleFactory {
 
-    private static final String VERSION_NUMBER = Version.getVersion();;
+    private static final String VERSION_NUMBER = "0.6";
 
     // This class method allows the ingest module instances created by this 
     // factory to use the same display name that is provided to the Autopsy
@@ -213,7 +212,7 @@ public class SmutDetectIngestModuleFactory implements IngestModuleFactory {
     @Override
     public IngestModuleIngestJobSettingsPanel getIngestJobSettingsPanel(IngestModuleIngestJobSettings settings) {
         if (!(settings instanceof SmutDetectIngestJobSettings)) {
-            throw new IllegalArgumentException("Expected settings argument to be instanceof SampleModuleIngestJobSettings");
+            throw new IllegalArgumentException("Expected settings argument to be instanceof SmutDetectIngestJobSettings");
         }
         return new SmutDetectIngestJobSettingsPanel((SmutDetectIngestJobSettings) settings);
     }
@@ -259,15 +258,6 @@ public class SmutDetectIngestModuleFactory implements IngestModuleFactory {
      * @param settings The settings for the ingest job.
      * @return A data source ingest module instance.
      */
-    /**
-    @Override
-    public DataSourceIngestModule createDataSourceIngestModule(IngestModuleIngestJobSettings settings) {
-        if (!(settings instanceof SmutDetectIngestJobSettings)) {
-            throw new IllegalArgumentException("Expected settings argument to be instanceof SmutDetectIngestJobSettings");
-        }
-        return new SmutDetectFileIngestModule((SmutDetectIngestJobSettings) settings);
-    }
-    **/
     @Override
     public DataSourceIngestModule createDataSourceIngestModule(IngestModuleIngestJobSettings settings) {
         throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
