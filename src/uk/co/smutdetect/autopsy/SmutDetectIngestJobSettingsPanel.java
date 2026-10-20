@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect4Autopsy
  * Copyright (C) 2014 Rajmund Witt
  * 
@@ -42,7 +42,7 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         long min = Math.max(0L, Math.min(settings.minSizeFiles(), Integer.MAX_VALUE));
         imageBytesjSpinner.setValue((int) min);
         useThumbnailCheckBox.setSelected(settings.useThumbnail());
-        
+        detectNudityjCheckBox.setSelected(settings.detectNudity());
     }
 
     /**
@@ -62,7 +62,8 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         return new SmutDetectIngestJobSettings(
             skipKnownFilesCheckBox.isSelected(),
             useThumbnailCheckBox.isSelected(),
-            ((Number) imageBytesjSpinner.getValue()).longValue());
+            ((Number) imageBytesjSpinner.getValue()).longValue(),
+            detectNudityjCheckBox.isSelected());
     }
 
     /**
@@ -80,6 +81,7 @@ public class SmutDetectIngestJobSettingsPanel extends IngestModuleIngestJobSetti
         minSizeLabel = new javax.swing.JLabel();
         detectNudityjCheckBox = new javax.swing.JCheckBox();
 
+        skipKnownFilesCheckBox.setSelected(true);
         org.openide.awt.Mnemonics.setLocalizedText(skipKnownFilesCheckBox, org.openide.util.NbBundle.getMessage(SmutDetectIngestJobSettingsPanel.class, "SmutDetectIngestJobSettingsPanel.skipKnownFilesCheckBox.text")); // NOI18N
         skipKnownFilesCheckBox.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {

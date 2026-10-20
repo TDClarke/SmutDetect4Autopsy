@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect4Autopsy
  * Copyright (C) 2014 Rajmund Witt
  * 
@@ -27,10 +27,11 @@ import org.sleuthkit.autopsy.ingest.IngestModuleIngestJobSettings;
  */
 public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSettings {
 
-    // Bumped from 1 when minSize was added: settings saved by the old class
-    // would otherwise deserialise with minSize == 0 (field initialisers do not
-    // run on deserialisation). Autopsy falls back to the defaults instead.
-    private static final long serialVersionUID = 1L;
+    // Bumped from 1 when minSize and detectNudity were added: settings saved
+    // by the old class would otherwise deserialise with minSize == 0 and
+    // detectNudity == false (field initialisers do not run on
+    // deserialisation). Autopsy falls back to the defaults instead.
+    private static final long serialVersionUID = 2L;
 
     private boolean skipKnownFiles = true;
     private boolean useThumbnail = true;
@@ -40,10 +41,12 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
     SmutDetectIngestJobSettings() {
     }
 
-    SmutDetectIngestJobSettings(boolean skipKnownFiles, boolean useThumbnail, long minSize) {
+    SmutDetectIngestJobSettings(boolean skipKnownFiles, boolean useThumbnail,
+            long minSize, boolean detectNudity) {
         this.skipKnownFiles = skipKnownFiles;
         this.useThumbnail = useThumbnail;
         this.minSize = minSize;
+        this.detectNudity = detectNudity;
     }
 
     @Override
@@ -63,6 +66,10 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
         this.minSize = minSize;
     }
 
+    void setDetectNudity(boolean enabled) {
+        detectNudity = enabled;
+    }
+
     boolean skipKnownFiles() {
         return skipKnownFiles;
     }
@@ -73,5 +80,9 @@ public class SmutDetectIngestJobSettings implements IngestModuleIngestJobSetting
 
     long minSizeFiles() {
         return minSize;
+    }
+
+    boolean detectNudity() {
+        return detectNudity;
     }
 }

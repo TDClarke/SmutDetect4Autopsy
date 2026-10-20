@@ -10,6 +10,26 @@ final class NudityClassifier {
     private static final float H_MAX = 50f / 360f;
     private static final float S_MIN = 0.23f, S_MAX = 0.68f, V_MIN = 0.35f;
 
+    /** Classification result plus the region statistics behind it. */
+    static final class Analysis {
+        final Result result;
+        final int sampleWidth, sampleHeight;
+        final int totalSkin;
+        /** Sizes in pixels of the three largest skin regions (0 if absent or not computed). */
+        final int largest, second, third;
+
+        Analysis(Result result, int sampleWidth, int sampleHeight,
+                int totalSkin, int largest, int second, int third) {
+            this.result = result;
+            this.sampleWidth = sampleWidth;
+            this.sampleHeight = sampleHeight;
+            this.totalSkin = totalSkin;
+            this.largest = largest;
+            this.second = second;
+            this.third = third;
+        }
+    }
+
     private NudityClassifier() { }
 
     static boolean[] skinMask(int[] argb, int n) {
@@ -35,13 +55,17 @@ final class NudityClassifier {
     }
 
     static Result classify(int[] argb, int width, int height) {
+        return analyse(argb, width, height).result;
+    }
+
+    static Analysis analyse(int[] argb, int width, int height) {
         final int total = width * height;
-        if (total <= 0 || argb.length < total) return Result.ERROR;
+        if (total <= 0 || argb.length < total) return new Analysis(Result.ERROR, width, height, 0, 0, 0, 0);
 
         boolean[] mask = skinMask(argb, total);
         int totalSkin = 0;
         for (boolean m : mask) if (m) totalSkin++;
-        if (100.0 * totalSkin / total < 15) return Result.NOT_NUDE;
+        if (100.0 * totalSkin / total < 15) return new Analysis(Result.NOT_NUDE, width, height, totalSkin, 0, 0, 0);
 
         int[] labels = new int[total];
         int[] stack = new int[total];
@@ -66,7 +90,7 @@ final class NudityClassifier {
             if (numRegions > sizes.length) sizes = Arrays.copyOf(sizes, sizes.length * 2);
             sizes[numRegions - 1] = count;
         }
-        if (numRegions == 0) return Result.NO_REGIONS;
+        if (numRegions == 0) return new Analysis(Result.NO_REGIONS, width, height, totalSkin, 0, 0, 0);
 
         int largestLabel = 1;
         for (int i = 1; i < numRegions; i++) {
@@ -93,10 +117,11 @@ final class NudityClassifier {
         long polygonArea = (long) (xMax - xMin) * (yMax - yMin);
         double avgIntensity = channelSum / (3.0 * largest) / 255.0;
 
-        if (largest < 0.35 * totalSkin && second < 0.3 * totalSkin && third < 0.3 * totalSkin) return Result.NOT_NUDE;
-        if (largest < 0.45 * totalSkin) return Result.NOT_NUDE;
-        if (totalSkin < 0.3 * total && largest < 0.55 * polygonArea) return Result.NOT_NUDE;
-        if (numRegions > 60 && avgIntensity < 0.25) return Result.NOT_NUDE;
-        return Result.NUDE;
+        Result r = Result.NUDE;
+        if (largest < 0.35 * totalSkin && second < 0.3 * totalSkin && third < 0.3 * totalSkin) r = Result.NOT_NUDE;
+        else if (largest < 0.45 * totalSkin) r = Result.NOT_NUDE;
+        else if (totalSkin < 0.3 * total && largest < 0.55 * polygonArea) r = Result.NOT_NUDE;
+        else if (numRegions > 60 && avgIntensity < 0.25) r = Result.NOT_NUDE;
+        return new Analysis(r, width, height, totalSkin, largest, second, third);
     }
 }

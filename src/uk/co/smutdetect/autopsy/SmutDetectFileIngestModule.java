@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect4Autopsy
  * Copyright (C) 2014 Rajmund Witt
  * 
@@ -67,6 +67,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
     private final boolean skipKnownFiles;
     private final boolean useThumbnail;
     private final long minSize;
+    private final boolean detectNudity;
 
     private IngestJobContext context = null;
     private Blackboard blackboard = null;
@@ -75,6 +76,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
         this.skipKnownFiles = settings.skipKnownFiles();
         this.useThumbnail = settings.useThumbnail();
         this.minSize = settings.minSizeFiles();
+        this.detectNudity = settings.detectNudity();
     }
 
     @Override
@@ -108,7 +110,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
         }
 
         try {
-            SmutDetectCategorisedImage cImage = SmutDetectImageScanner.scanImage(file);
+            SmutDetectCategorisedImage cImage = SmutDetectImageScanner.scanImage(file, 0, detectNudity);
             if (cImage == null) {
                 return IngestModule.ProcessResult.OK; // not decodable; logged by the scanner
             }
@@ -134,9 +136,8 @@ class SmutDetectFileIngestModule implements FileIngestModule {
                     attributes);
 
             // Creating the result only writes it to the case database; posting
-            // it notifies the UI and other modules. (Newer Autopsy versions
-            // also offer postArtifact(artifact, moduleName, context.getJobId()).)
-            blackboard.postArtifact(resultAdded.getAnalysisResult(), MODULE_NAME);
+            // it notifies the UI and other modules.
+            blackboard.postArtifact(resultAdded.getAnalysisResult(), MODULE_NAME, context.getJobId());
             
             if (cImage.isNude()) {
                 Collection<BlackboardAttribute> nudeAttrs = new ArrayList<>();
@@ -146,7 +147,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
                 
                 nudeAttrs.add(new BlackboardAttribute(
                 new BlackboardAttribute.Type(BlackboardAttribute.ATTRIBUTE_TYPE.TSK_COMMENT),
-                MODULE_NAME, cImage.toString()));
+                MODULE_NAME, cImage.toNudeString()));
 
                 AnalysisResultAdded nudeResult = file.newAnalysisResult(
                 BlackboardArtifact.Type.TSK_INTERESTING_ITEM,
@@ -156,7 +157,7 @@ class SmutDetectFileIngestModule implements FileIngestModule {
                 "Large contiguous skin-tone region(s) detected",
                 nudeAttrs);
                 
-                blackboard.postArtifact(nudeResult.getAnalysisResult(), MODULE_NAME);
+                blackboard.postArtifact(nudeResult.getAnalysisResult(), MODULE_NAME, context.getJobId());
                 addToBlackboardPostCount(context.getJobId(), 1L);
             }
 

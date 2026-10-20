@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect
  * Copyright (C) 2014 Rajmund Witt
  *
@@ -47,10 +47,36 @@ public class SmutDetectCategorisedImage {
     private int readableYCbCrPercentage_;
     private int readableAveragePercentage_;
     private NudityClassifier.Result nudity_ = null; // null = not run
+    private NudityClassifier.Analysis nudityAnalysis_ = null;
 
     public NudityClassifier.Result getNudity() { return nudity_; }
     public void setNudity(NudityClassifier.Result r) { nudity_ = r; }
     public boolean isNude() { return nudity_ == NudityClassifier.Result.NUDE; }
+
+    void setNudityAnalysis(NudityClassifier.Analysis a) {
+        nudityAnalysis_ = a;
+        nudity_ = (a == null) ? null : a.result;
+    }
+
+    /**
+     * @return the usual skin-tone text followed by the sizes of the three
+     * largest skin regions found by the nudity heuristic. Used as the comment
+     * on the "Nude" result only; toString() is unchanged.
+     */
+    public String toNudeString() {
+        StringBuilder s = new StringBuilder(toString());
+        final NudityClassifier.Analysis a = nudityAnalysis_;
+        if (a != null) {
+            s.append("\nNudity analysis (on ").append(a.sampleWidth).append("x")
+                    .append(a.sampleHeight).append(" sample, ")
+                    .append(a.totalSkin).append("px skin in total)");
+            s.append("\nLargest skin regions: ")
+                    .append(a.largest).append("px, ")
+                    .append(a.second).append("px, ")
+                    .append(a.third).append("px");
+        }
+        return s.toString();
+    }
 
     /**
      * @param width  width in pixels of the image as scanned

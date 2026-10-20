@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect
  * Copyright (C) 2014 Rajmund Witt
  *

@@ -1,4 +1,4 @@
-/**
+/*
  * SmutDetect
  * Copyright (C) 2014 Rajmund Witt
  *
@@ -77,7 +77,7 @@ public abstract class SmutDetectImageScanner {
         return scanImage(file, 0, true);
     }
 
-    private static NudityClassifier.Result classifyNudity(BufferedImage img, int bw, int bh) {
+    private static NudityClassifier.Analysis classifyNudity(BufferedImage img, int bw, int bh) {
         try {
             final int step = Math.max(1, Math.max(bw, bh) / NUDE_MAX_DIM);
             final int sw = (bw + step - 1) / step;
@@ -91,11 +91,11 @@ public abstract class SmutDetectImageScanner {
                     argb[k++] = row[x];
                 }
             }
-        return NudityClassifier.classify(argb, sw, sh);
+        return NudityClassifier.analyse(argb, sw, sh);
         }
         catch (RuntimeException | OutOfMemoryError e) {
             logger_.log(Level.WARNING, "Nudity classification failed", e);
-            return NudityClassifier.Result.ERROR;
+            return new NudityClassifier.Analysis(NudityClassifier.Result.ERROR, 0, 0, 0, 0, 0, 0);
         }
     }
     
@@ -165,7 +165,7 @@ public abstract class SmutDetectImageScanner {
                 cImage.computePercentages(true, true);
                 
                 if (detectNudity) {
-                    cImage.setNudity(classifyNudity(img, bw, bh));
+                    cImage.setNudityAnalysis(classifyNudity(img, bw, bh));
                 }
                 return cImage;
 
@@ -173,6 +173,13 @@ public abstract class SmutDetectImageScanner {
                 reader.dispose();
             }
 
+        } catch (LinkageError e) {
+            // A broken ImageIO plugin (e.g. the WebP reader whose native DLL
+            // won't load) throws NoClassDefFoundError / UnsatisfiedLinkError /
+            // ExceptionInInitializerError. Skip the file instead of failing it.
+            logger_.log(Level.WARNING, "Image decoder unavailable for "
+                    + file.getName() + " (id=" + file.getId() + "): " + e.toString());
+            return null;
         } catch (Exception | OutOfMemoryError e) {
             logger_.log(Level.WARNING, "Error scanning image for Skintone Analysis: "
                     + file.getName() + " (id=" + file.getId() + ")", e);
